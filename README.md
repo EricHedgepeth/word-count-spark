@@ -20,7 +20,7 @@ Ensure you have:
 ### **2. Set Up EC2/LightSail Instance**  
 1. Launch an Amazon Linux 2 instance and connect via SSH:  
    ```bash
-   ssh -i "your-key.pem" ec2-user@your-instance-ip
+   ssh -i "Hands_on_11.pem" ec2-user@3.144.243.69
    ```
 
 2. Install **Java 11**:  
@@ -35,6 +35,11 @@ Ensure you have:
    sudo mount -o remount,size=2G /tmp
    ```
 
+   - verify it is correct 
+   ```bash 
+   df -h /tmp
+   ```
+
 4. Install Python and PySpark:  
    ```bash
    sudo yum install python3-pip -y
@@ -47,36 +52,7 @@ Ensure you have:
 ### **3. Word Count Script**  
 Create `word_count.py`:
 
-```python
-from pyspark.sql import SparkSession
-
-# AWS Credentials
-AWS_ACCESS_KEY_ID = 'YOUR_ACCESS_KEY'
-AWS_SECRET_ACCESS_KEY = 'YOUR_SECRET_KEY'
-
-# S3 paths
-S3_INPUT = 's3a://your-bucket-name/input_file.txt'
-S3_OUTPUT = 's3a://your-bucket-name/output_folder/'
-
-# Spark Session
-spark = SparkSession.builder \
-    .appName("WordCount") \
-    .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1,com.amazonaws:aws-java-sdk-bundle:1.11.901") \
-    .getOrCreate()
-
-# Hadoop S3 Configuration
-hadoop_conf = spark.sparkContext._jsc.hadoopConfiguration()
-hadoop_conf.set("fs.s3a.access.key", AWS_ACCESS_KEY_ID)
-hadoop_conf.set("fs.s3a.secret.key", AWS_SECRET_ACCESS_KEY)
-
-# Word Count Logic
-text_file = spark.sparkContext.textFile(S3_INPUT)
-counts = text_file.flatMap(lambda line: line.split()) \
-                  .map(lambda word: (word, 1)) \
-                  .reduceByKey(lambda a, b: a + b)
-counts.saveAsTextFile(S3_OUTPUT)
-spark.stop()
-```
+- check codingspcaes --> word_count.py file for code 
 
 Run with:  
 ```bash
@@ -118,7 +94,7 @@ Deploy a simple Node.js server in a Docker container, push the image to Docker H
 ### **2. Dockerize the Application**  
 1. Create a `Dockerfile`:  
    ```dockerfile
-   FROM node:14
+   FROM node:16
    WORKDIR /app
    COPY package*.json ./
    RUN npm install
@@ -127,10 +103,16 @@ Deploy a simple Node.js server in a Docker container, push the image to Docker H
    CMD ["node", "server.js"]
    ```
 
-2. Build and push the image to Docker Hub:  
+2. Test Local first:   
    ```bash
-   docker build -t your-dockerhub-username/webserver:latest .
-   docker push your-dockerhub-username/webserver:latest
+    docker build -t webserver:latest .
+    docker run -p 3000:3000 webserver:latest
+   ```
+
+3. Build and push the image to Docker Hub:  
+   ```bash
+    docker tag webserver:latest ericinator/webserver:latest
+d   ocker push ericinator/webserver:latest
    ```
 
 ---
@@ -146,11 +128,11 @@ Deploy a simple Node.js server in a Docker container, push the image to Docker H
 
 2. Run the container:  
    ```bash
-   docker pull your-dockerhub-username/webserver:latest
-   docker run -d -p 80:3000 your-dockerhub-username/webserver:latest
+    sudo docker pull ericinator/webserver:latest
+    sudo docker run -d -p 80:3000 ericinator/webserver:latest
    ```
 
-Access at: `http://your-ec2-public-ip/`.
+Access at: `http://3.144.243.69/`.
 
 ---
 
@@ -171,11 +153,11 @@ Set up a serverless ETL pipeline to process files uploaded to an S3 bucket.
 ### **2. Setup**  
 
 #### **AWS Resources**  
-1. Create S3 buckets for source (raw data) and destination (processed data).  
+1. Create S3 buckets for source (raw-12345data) and destination (cleaned-data12345).  
 2. Set up an IAM role with permissions for S3 and CloudWatch Logs.  
 
 #### **Lambda Function**  
-1. Create `etl_lambda.py`:  
+1. Create `lambda_function.py`:  
 
 ```python
 import boto3
@@ -195,7 +177,7 @@ def lambda_handler(event, context):
     try:
         source_bucket = event['Records'][0]['s3']['bucket']['name']
         object_key = event['Records'][0]['s3']['object']['key']
-        destination_bucket = 'etl-cleaned-data-1'  # Replace with your destination bucket name
+        destination_bucket = 'cleaned-data12345'  # Replace with your destination bucket name
         
         logger.info("Source bucket: %s", source_bucket)
         logger.info("Object key: %s", object_key)
@@ -268,12 +250,9 @@ def lambda_handler(event, context):
 
 ### **3. Add Trigger and Test**  
 1. Add an **S3 trigger** for the source bucket with "ObjectCreated" events.  
-2. Upload a file to the source bucket and verify logs in **CloudWatch**.
+2. Upload a file to the source bucket and verify logs in 
 
 ---
 
-### **Best Practices for All Projects**  
-1. Use environment variables for sensitive data like API keys.  
-2. Tag Docker images with semantic versions for easy updates.  
-3. Monitor logs for troubleshooting.  
-4. Follow AWS best practices for security and cost optimization.  
+### **Screenshots**  
+
